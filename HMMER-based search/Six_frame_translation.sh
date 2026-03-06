@@ -21,4 +21,4 @@ gen=$(echo $file | cut -d "/" -f2)
 
 
 mkdir ./input/protein/${spe}
-python3 input/python_codes/sft_beta.py -f ${spe}_genome.fna -p 10 -o input/protein/${spe}/ -i input/target_genomes
+python3 input/python_codes/sft_beta.py -f ${spe}_genome.fna -p 15 -o input/protein/${spe}/ -i input/target_genomes
