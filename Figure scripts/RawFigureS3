@@ -1,0 +1,102 @@
+##################################################################################
+#
+#       Title:    Plotting drosomycin against Blattodea+Mantodea phylogeny
+#       Project:  Drosomycin
+#       Year:     2025
+#
+##################################################################################
+
+#-------------------------------------------------------------------------------
+#----------- Introduction ------------------------------------------------------
+#-------------------------------------------------------------------------------
+
+#----------- Library installation -----------------------------------------------
+
+
+#install.packages(c('tidyverse','ape','ggimage','patchwork','phytools'))
+# if (!requireNamespace("BiocManager", quietly = TRUE))
+#   install.packages("BiocManager")
+#  BiocManager::install("ggtree")
+
+
+#----------- Library importation -----------------------------------------------
+
+library(tidyverse)
+library(ape)
+library(ggimage)
+library(patchwork)
+library(phytools)
+library(ggtree)
+library(geiger)
+library(ggplot2)
+library(dplyr)
+
+#----------- Set work directory ------------------------------------------------
+
+setwd("~/Projects/Drosomycin/SupplFigS4/")
+
+#----------- Tree importation --------------------------------------------------
+
+
+tree = read.tree("FigureS4_Cladogram_Mantodea-Blattodea.tre")
+
+
+#----------- Dataset importation -----------------------------------------------
+
+data = read.csv("dataset_drs_for_phylogeny_Blatto-Manto_raw.csv",
+                header = T, 
+                sep = ",",dec = ".",
+                stringsAsFactors = T) #turn str into factors
+
+str(data)
+summary(data)
+
+
+#----------- Check concordance tree-data ---------------------------------------
+
+check <- name.check(phy = tree, data = data, 
+                              data.names = data$Species_name)
+
+check
+
+#----------- Figure ggtree -----------------------------------------------------
+
+
+p <- ggtree(tree) %<+% data + xlim(-.10, 35)+
+  geom_tippoint(aes(colour=DRS.Present.absent.NA, size = BUSCO..C.,shape = Data_type))+
+  geom_tiplab(size = 2.4,offset = 0.3, fontface = 3)+
+  #geom_treescale()+
+  guides(colour=guide_legend(title = "Drosomycin"))+
+  #scale_color_discrete(labels=c("Absent", "Present", "Uncertain"))+
+  scale_color_manual(values = c("red2","blue","grey60"),
+                     labels=c("Absent", "Present", "Uncertain"))+
+  scale_size_continuous(range = c(.5,4), name = "BUSCO score",
+                        guide = guide_legend(reverse = T))+ 
+  geom_strip('Nasutitermes_lujae', 'Mastotermes_darwiniensis', barsize=1, color='turquoise2', 
+             label = "Isoptera", offset=7.2,offset.text=.4)+ 
+  geom_strip('Cryptocercus_meridianus', 'Cryptocercus_sp1', barsize=1, color='turquoise2', 
+             label = "Cryptocercidae", offset=7.2,offset.text=.4)+ 
+  geom_strip('Anaplecta_basalis', 'Anaplecta_omei', barsize=1, color='turquoise2', 
+             label = "Anaplectidae", offset=7.2,offset.text=.4)+ 
+  geom_strip('Periplaneta_sp1', 'Hebardina_concinna', barsize=1, color='turquoise2', 
+             label = "Blattidae", offset=7.2,offset.text = .4, extend = .5)+ 
+  geom_strip('Nauphoeta_cinerea', 'Rhabdoblatta_mentiens2', barsize=1, color='deepskyblue3', 
+             label = "Blaberidae", offset=7.2,offset.text = .4, extend = .2)+ 
+  geom_strip('Blattella_germanica_pcr', 'Malaccina_discoidalis', barsize=1, color='deepskyblue3', 
+             label = "Ectobiidae", offset=7.2,offset.text = .4, extend = .0)+ 
+  geom_strip('Beybienkonus_acuticercus', 'Eupolyphaga_hanae2', barsize=1,
+             color='purple', 
+             label = "Corydiidae", offset=7.2,offset.text = .4, extend = .0)+
+  geom_strip('Tenodera_sinensis', 'Metallyticus_violacea', barsize=1,
+             color='darkred', 
+             label = "Mantodea", offset=7.2,offset.text = .4, extend = .0)
+
+
+
+p
+
+#NB depending on the colour you wish, you have to choose a
+#different scale_color (or scale_fill if filling is needed).
+# you can find differente scales here
+# https://www.sthda.com/english/wiki/ggplot2-colors-how-to-change-colors-automatically-and-manually
+
