@@ -29,3 +29,8 @@ Script J6-extraction.sh launches the python script gene_extraction_only.py to ex
 To improve the search we perform the step 2) and 3) again using J7, J8, J9, J10. The J9-cleaning2.sh extract tabular information on the genes making at least 50% of the profile length this time. Manual curation of the gene found was performed to remove genes that were not Drs.
 
 
+Explanation of the pipeline for transcriptome.
+
+The procedure was similar with 2 minor changes:
+In step 1) transcriptomes file names were formatted as such {genus}_{species}_genome.fna
+in step 3) and 4) the scripts B_gene_extraction.sh and gene_extraction_trinity.py were used.
