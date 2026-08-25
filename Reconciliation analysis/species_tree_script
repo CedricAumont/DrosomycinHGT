@@ -1,0 +1,82 @@
+# Script to extract single copy orthologues from BUSCO assessment and building species phylogeny
+
+#Load BUSCO
+module load Other/BUSCO
+
+#Download genomes from a list of species and respected genome accession ID
+list=${1}
+IFS=$'\n'
+for genome in $(cat ${list})
+do
+    accession=$(echo ${genome} | cut -d $'\t' -f 2)
+    species=$(echo ${genome} | cut -d $'\t' -f 1)
+
+    mkdir ${species}
+
+    cd ${species}
+    
+    for i in {1..10}
+    do
+        if [[ -f ${species}_${accession}.fna ]];then
+            echo "skip downloading"
+        else
+            ./datasets download genome accession ${accession} --include genome --no-progressbar > /dev/null
+            unzip ncbi_dataset.zip
+            mv ncbi_dataset/data/${accession}*/${accession}*.fna  ./
+            mv ${accession}*fna ${species}_${accession}.fna
+            rm -r ncbi* README.md  md5sum.txt
+        fi
+    done
+
+# Run busco command
+
+    busco -f -i ${species}_${accession}.fna \
+        -o ${species} \
+        -l insecta_odb10 \
+        -m genome -c 12
+    mv ${species}/run_insecta_odb10/busco_sequences/single_copy_busco_sequences/ ./
+    rm -r busco_downloads ${species} ${species}_${accession}.fna
+    cd ..
+done
+
+
+# count the number of gene recovered per genome
+
+IFS=$'\n'
+for gene in $(cat all_genes)
+do
+    count=$(ls ./busco_results/[A-Z]*/single_copy_busco_sequences/${gene}.faa  | wc -l)
+    echo -e "${gene}\t${count}" >> gene_count.tsv
+done
+
+# get genes that are present in >600 genomes
+awk '$2 > 600' gene_count.tsv | cut -d $'\t' -f 1 >> selected_genes
+# 542 genes
+
+
+# Multiple sequence alignment with mafft
+module load mafft
+
+for gene in $(cat ../selected_genes)
+do
+    for sp in ../busco_results/[A-Z]*
+    do
+        name=$(basename ${sp})
+        cat ${sp}/single_copy_busco_sequences/${gene}.faa | sed "s/>.*/>${name}/" >> ${gene}.faa
+    done
+    mafft --auto ${gene}.faa >> ${gene}_aligned.fasta
+    rm ${gene}.faa
+done
+
+
+# Bilding phylogeny
+
+ml Other/FASconCAT-G/1.04
+ml bioinfo-ugrp-modules
+
+perl ./Other/FASconCAT-G/1.04/FASconCAT-G_v1.04.pl -s -p -i
+
+module load iqtree
+iqtree2 -s FcC_supermatrix.fas -st AA -m MFP -B 1000 -bnni -alrt 1000 -nt AUTO
+
+#END
