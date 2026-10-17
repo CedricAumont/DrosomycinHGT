@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH --partition=compute
+#SBATCH --job-name=alerax
+#SBATCH -o alerax.log
+#SBATCH -c 64
+#SBATCH --mem=256gb
+#SBATCH -t 4-00:00:00
+
+~/tools/AleRax/build/bin/alerax -f family_plants.txt \
+-s ~/alerax/insect_rooted.tre \
+-p Drosomycin_reconciliation_DTL \
+--rec-model UndatedDTL
